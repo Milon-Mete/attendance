@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS ATTENDANCE — Futuristic Biometric System</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- face-api.js from CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="/js/location.js"></script>
+  <script defer src="/js/camera.js"></script>
+  <script defer src="/js/face-recognition.js"></script>
+  <script defer src="/js/app.js"></script>
+</head>
+<body>
+
+  <!-- Animated background particles -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Scan line effect -->
+  <div class="scan-line"></div>
+
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>NEXUS</h1>
+          <span class="logo-sub">ATTENDANCE MATRIX</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a href="/admin" target="_blank" class="admin-link" title="Admin Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+        </a>
+        <div class="status-badge" id="connectionStatus">
+          <span class="dot"></span>
+          <span class="status-text">INITIALIZING</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Camera Section -->
+    <section class="camera-section">
+      <div class="camera-container" id="cameraContainer">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+        <div class="camera-overlay-ui">
+          <div class="scanning-frame">
+            <div class="frame-corner tl"></div>
+            <div class="frame-corner tr"></div>
+            <div class="frame-corner bl"></div>
+            <div class="frame-corner br"></div>
+            <div class="scanning-text" id="scanStatus">INITIALIZING CAMERA...</div>
+          </div>
+        </div>
+        <div class="camera-loader" id="cameraLoader">
+          <div class="loader-ring"></div>
+          <span>Loading Models...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- User Info & Registration -->
+    <section class="user-section" id="userSection" style="display:none;">
+      <div class="glass-card user-card">
+        <div class="user-avatar" id="userAvatar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </div>
+        <div class="user-info">
+          <h2 id="userNameDisplay">—</h2>
+          <div class="user-stats">
+            <div class="stat">
+              <span class="stat-value" id="totalDuties">0</span>
+              <span class="stat-label">Duties</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="presentCount">0</span>
+              <span class="stat-label">Present</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Registration Form (hidden when user exists) -->
+    <section class="register-section" id="registerSection">
+      <div class="glass-card">
+        <h2 class="section-title">
+          <span class="title-icon">◈</span>
+          REGISTER BIOMETRIC PROFILE
+        </h2>
+        <p class="section-desc">Enter your name to create a new identity profile</p>
+        <div class="input-group">
+          <input type="text" id="nameInput" placeholder="Enter your name..." class="neon-input" maxlength="50">
+          <button id="registerBtn" class="neon-btn" disabled>
+            <span>REGISTER</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+        <p class="existing-user-text">
+          Already registered? <a href="#" id="showExistingUser">Click here</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Existing User Selection -->
+    <section class="user-select-section" id="userSelectSection" style="display:none;">
+      <div class="glass-card">
+        <h2 class="section-title">
+          <span class="title-icon">◈</span>
+          SELECT IDENTITY
+        </h2>
+        <p class="section-desc">Choose your registered profile</p>
+        <div class="user-list" id="userList"></div>
+        <p class="existing-user-text">
+          New user? <a href="#" id="showRegisterForm">Register here</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Duty Controls -->
+    <section class="duty-section" id="dutySection" style="display:none;">
+      <div class="glass-card">
+        <h2 class="section-title">
+          <span class="title-icon">◈</span>
+          DUTY TERMINAL
+        </h2>
+
+        <!-- GPS Status -->
+        <div class="gps-status" id="gpsStatus">
+          <div class="gps-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2a10 10 0 1 0 10 10"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <div class="gps-info">
+            <span class="gps-label">GEOLOCATION</span>
+            <span class="gps-coords" id="gpsCoords">Acquiring signal...</span>
+          </div>
+          <div class="gps-signal" id="gpsSignal">
+            <span class="signal-bar"></span>
+            <span class="signal-bar"></span>
+            <span class="signal-bar"></span>
+          </div>
+        </div>
+
+        <!-- Face Match Status -->
+        <div class="face-match-status" id="faceMatchStatus" style="display:none;">
+          <div class="match-icon" id="matchIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div class="match-text">
+            <span class="match-label" id="matchLabel">FACE VERIFIED</span>
+            <span class="match-confidence" id="matchConfidence">Confidence: 98.2%</span>
+          </div>
+        </div>
+
+        <!-- Duty Timer -->
+        <div class="duty-timer" id="dutyTimer" style="display:none;">
+          <div class="timer-display">
+            <span class="timer-hours" id="timerHours">00</span>
+            <span class="timer-sep">:</span>
+            <span class="timer-minutes" id="timerMinutes">00</span>
+            <span class="timer-sep">:</span>
+            <span class="timer-seconds" id="timerSeconds">00</span>
+          </div>
+          <span class="timer-label">DUTY DURATION</span>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="duty-controls">
+          <button id="startDutyBtn" class="duty-btn start-btn">
+            <div class="btn-glow"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <span>START DUTY</span>
+          </button>
+          <button id="endDutyBtn" class="duty-btn end-btn" disabled>
+            <div class="btn-glow"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <rect x="8" y="8" width="8" height="8" rx="1"/>
+            </svg>
+            <span>END DUTY</span>
+          </button>
+        </div>
+
+        <!-- Attendance Result -->
+        <div class="attendance-result" id="attendanceResult" style="display:none;">
+          <div class="result-icon" id="resultIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="result-details">
+            <h3 id="resultTitle">ATTENDANCE MARKED</h3>
+            <p id="resultMessage">Your presence has been recorded</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History Section -->
+    <section class="history-section" id="historySection" style="display:none;">
+      <div class="glass-card">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="title-icon">◈</span>
+            DUTY LOG
+          </h2>
+          <button class="refresh-btn" id="refreshHistory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <p>No duty records yet</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-icon" id="toastIcon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <span class="toast-message" id="toastMessage">System Ready</span>
+  </div>
+
+</body>
+</html>

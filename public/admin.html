@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS ADMIN — Attendance Control Panel</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script defer src="/js/admin.js"></script>
+</head>
+<body>
+  <!-- Scan line effect -->
+  <div class="scan-line"></div>
+
+  <!-- Top Navigation -->
+  <nav class="admin-nav">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </div>
+        <div>
+          <h1>NEXUS</h1>
+          <span>ADMIN CONTROL PANEL</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <a href="/" class="nav-link" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+          </svg>
+          User Portal
+        </a>
+        <button class="refresh-btn" id="refreshAdmin" title="Refresh Data">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-container">
+
+    <!-- Stats Overview -->
+    <section class="stats-grid" id="statsGrid">
+      <div class="stat-card total-users">
+        <div class="stat-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="stat-card-info">
+          <span class="stat-card-value" id="totalUsers">0</span>
+          <span class="stat-card-label">Registered Users</span>
+        </div>
+      </div>
+
+      <div class="stat-card total-records">
+        <div class="stat-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+          </svg>
+        </div>
+        <div class="stat-card-info">
+          <span class="stat-card-value" id="totalRecords">0</span>
+          <span class="stat-card-label">Total Attendance Records</span>
+        </div>
+      </div>
+
+      <div class="stat-card active-duty">
+        <div class="stat-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div class="stat-card-info">
+          <span class="stat-card-value" id="activeDuties">0</span>
+          <span class="stat-card-label">Active Duties Now</span>
+        </div>
+      </div>
+
+      <div class="stat-card today-present">
+        <div class="stat-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="stat-card-info">
+          <span class="stat-card-value" id="todayPresent">0</span>
+          <span class="stat-card-label">Present Today</span>
+        </div>
+      </div>
+
+      <div class="stat-card today-mismatch">
+        <div class="stat-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div class="stat-card-info">
+          <span class="stat-card-value" id="todayMismatch">0</span>
+          <span class="stat-card-label">Face Mismatch Today</span>
+        </div>
+      </div>
+
+      <div class="stat-card today-total">
+        <div class="stat-card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
+        <div class="stat-card-info">
+          <span class="stat-card-value" id="todayTotal">0</span>
+          <span class="stat-card-label">Total Check-ins Today</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Currently On Duty -->
+    <section class="glass-card" id="activeDutySection">
+      <h2 class="section-title">
+        <span class="title-icon">◈</span>
+        <span>ON DUTY NOW</span>
+        <span class="blink-dot"></span>
+      </h2>
+      <div class="active-duty-list" id="activeDutyList">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <p>No one is currently on duty</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- User List Accordion -->
+    <section class="glass-card">
+      <h2 class="section-title">
+        <span class="title-icon">◈</span>
+        ALL USERS & STATISTICS
+      </h2>
+      <div class="admin-user-list" id="adminUserList">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+          </svg>
+          <p>No users registered yet</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- All Attendance Records -->
+    <section class="glass-card">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-icon">◈</span>
+          ALL ATTENDANCE RECORDS
+        </h2>
+        <div class="filter-group">
+          <select id="statusFilter" class="filter-select">
+            <option value="all">All Status</option>
+            <option value="present">Present</option>
+            <option value="face_mismatch">Face Mismatch</option>
+            <option value="active">Active</option>
+          </select>
+          <select id="userFilter" class="filter-select">
+            <option value="all">All Users</option>
+          </select>
+        </div>
+      </div>
+      <div class="records-table-container">
+        <table class="records-table" id="recordsTable">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Date</th>
+              <th>Duty Start</th>
+              <th>Duty End</th>
+              <th>Duration</th>
+              <th>Location</th>
+              <th>Face Match</th>
+              <th>Status</th>
+              <th>Photos</th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody">
+            <tr>
+              <td colspan="9" class="empty-cell">No records found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="record-count" id="recordCount">Showing 0 records</span>
+      </div>
+    </section>
+
+    <!-- Location Map Section (using Google Maps links) -->
+    <section class="glass-card">
+      <h2 class="section-title">
+        <span class="title-icon">◈</span>
+        RECENT LOCATIONS
+      </h2>
+      <div class="location-list" id="locationList">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <p>No location data available</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-icon" id="toastIcon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <span class="toast-message" id="toastMessage">Loading...</span>
+  </div>
+
+</body>
+</html>
